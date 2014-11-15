@@ -8,6 +8,12 @@ package info.zhegui.words;
  */
 public class Constants {
 
+    public static class PREFS{
+        public static final String DURATION="duration";
+        public static final String LESSON="lesson";
+
+        public static final int DEFAULT_DURATION=3;
+    }
 
     public static class ACTIVITY_RESULT{
         public static final int PAUSE=101;
@@ -67,65 +73,6 @@ public class Constants {
 		public static final int OK = 3;
 	}
 
-	/** SharedPreferences相关常量 */
-	public static class PREFS {
-		/** 启动次数 */
-		public static final String START_COUNT = "start_count";
-
-		/** 上班时间 */
-		public static final String ON_DUTY_TIME = "on_duty_time";
-
-		public static final String DRIVER_UNIQUE_CODE = "driver_unique_code";
-		public static final String DRIVER_STAR = "driver_star";
-		public static final String DRIVER_BALANCE = "driver_balance";
-		public static final String DRIVER_VERIFY_STATUS = "driver_verify_status";
-
-		public static final String LOGIN_LAST_PHONE_NUM = "login_last_phone_num";
-		/** 登录过的手机号码，用逗号连成字符串 */
-		public static final String LOGINED_PHONE_NUM = "logined_phone_num";
-		public static final String REGISTER_PHONE_NUM = "register_phone_num";
-		public static final String REGISTER_PWD = "register_pwd";
-		public static final String REGISTER_NAME = "register_name";
-		public static final String REGISTER_YYZ_NUMBER = "register_yyz_number";
-		public static final String REGISTER_PLATE_NUMBER = "register_plate_number";
-		public static final String REGISTER_ID_NUMBER = "register_id_number";
-		public static final String REGISTER_COMPANY_NAME = "register_company_name";
-		public static final String REGISTER_COMPANY_ID = "register_company_id";
-		public static final String REGISTER_TERMINAL = "register_terminal";
-		/** 头像保存在内部存储 */
-		public static final String REGISTER_PORTRAIT_IMAGE = "register_portrait_image";
-		/** 头像服务器地址 */
-		public static final String REGISTER_PORTRAIT_IMAGE_URL = "register_portrait_image_url";
-		/** 营运证保存在内部存储 */
-		public static final String REGISTER_YYZ_IMAGE = "register_yyz_image";
-		/** 营运证服务器地址 */
-		public static final String REGISTER_YYZ_IMAGE_URL = "register_yyz_image_url";
-
-		public static final String DEFAULT_DRIVER_STAR = "1";
-
-		public static final String WALLET_BANK_TYPE = "wallet_bank_type";
-		public static final String WALLET_BANK_NUMBER = "wallet_bank_number";
-		public static final String WALLET_ALIPAY = "wallet_alipay";
-
-		public static final String SETTINGS_OFFCAR_ENABLED = "settings_offcar_enabled";
-		public static final String SETTINGS_OFFCAR_PHONE_NUM = "settings_offcar_phone_num";
-		public static final String SETTINGS_RETURN_ENABLED = "settings_return_enabled";
-		public static final String SETTINGS_RETURN_ADDR = "settings_return_addr";
-		public static final String SETTINGS_RETURN_RADIUS = "settings_return_radius";
-		public static final String SETTINGS_CHANGE_SHIFTS_ENABLED = "settings_change_shifts_enabled";
-		public static final String SETTINGS_CHANGE_SHIFTS_ADDR = "settings_change_shifts_addr";
-		public static final String SETTINGS_CHANGE_SHIFTS_TIME = "settings_change_shifts_time";
-		public static final String SETTINGS_CHANGE_SHIFTS_TIME_IN_ADVANCE = "settings_change_shifts_time_in_advance";
-
-		public static final String CAR_SETTINGS_DEVICE_NUMBER = "car_settings_device_number";
-		public static final String CAR_SETTINGS_SERVER_IP = "car_settings_server_ip";
-		public static final String CAR_SETTINGS_SERVER_PORT = "car_settings_server_port";
-		public static final String CAR_SETTINGS_DIAL_ACCOUNT = "car_settings_dial_account";
-		public static final String CAR_SETTINGS_DIAL_PWD = "car_settings_dial_pwd";
-
-		public static final String LOCATION_LAST_LATITUDE = "location_last_latitude";
-		public static final String LOCATION_LAST_LONGITUDE = "location_last_longtitude";
-	}
 
 	public static class HTTP {
 		public static final String NETWORK_ERROR = "network_error";

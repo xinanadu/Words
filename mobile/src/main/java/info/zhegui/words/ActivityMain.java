@@ -22,6 +22,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +44,8 @@ public class ActivityMain extends ActionBarActivity {
 
     private ArrayList<Word> listWord = new ArrayList<Word>();
     private ArrayList<String> listString = new ArrayList<String>();
+
+    private Spinner spinnerLesson;
 
     private SharedPreferences prefs;
 
@@ -96,10 +99,35 @@ public class ActivityMain extends ActionBarActivity {
         currentPosition=prefs.getInt(POSITION,0);
         log("currentPosition:"+currentPosition);
 
-        loadWords();
 
         tvFanyiTitle = (TextView) findViewById(R.id.tv_fanyi_title);
         tvFanyi = (TextView) findViewById(R.id.tv_fanyi);
+
+        spinnerLesson = (Spinner) findViewById(R.id.spinner_lesson);
+
+        ArrayAdapter<CharSequence> adapterLesson = ArrayAdapter.createFromResource(this,
+                R.array.lesson, android.R.layout.simple_spinner_item);
+// Specify the layout to use when the list of choices appears
+        adapterLesson.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerLesson.setAdapter(adapterLesson);
+        spinnerLesson.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                loadWords();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+
+        int lesson = prefs.getInt(Constants.PREFS.LESSON, 0);
+        spinnerLesson.setSelection(lesson);
+
+
 
         mListView = (ListView) findViewById(R.id.listview);
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, listString);
@@ -109,7 +137,8 @@ public class ActivityMain extends ActionBarActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String key = listString.get(position);
                 key = key.substring(key.indexOf(".") + 1);
-                key = key.replaceAll("\\（[^}]*\\）", "");
+                key = key.replaceAll("\\（[^}]*\\）", ""); //日文括号
+                key = key.replaceAll("\\([^}]*\\)", "");//英文括号
                 log("-->key:" + key);
                 fanyiKey = key;
                 tvFanyiTitle.setText(fanyiKey);
@@ -145,6 +174,9 @@ public class ActivityMain extends ActionBarActivity {
                 mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
             }
         });
+
+
+        loadWords();
     }
 
     @Override
@@ -278,6 +310,8 @@ log("currentPosition:"+currentPosition);
 //                    br.close();
 //                    is.close();
 
+                    String lesson = spinnerLesson.getSelectedItem().toString();
+
                     DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
                     SQLiteDatabase db = null;
                     Cursor cursor = null;
@@ -285,9 +319,9 @@ log("currentPosition:"+currentPosition);
 
                     db = dbHelper.getWritableDatabase();
                     cursor = db.query(DatabaseHelper.TBL_NAME, null,
-                            DatabaseHelper.COL_REMEMBER + "=? "
-                            ,
-                            new String[]{DatabaseHelper.FORGET + ""},
+                            DatabaseHelper.COL_REMEMBER + "=? and "+
+                            DatabaseHelper.COL_LESSON + " =? ",
+                            new String[]{DatabaseHelper.FORGET + "",lesson },
                             null, null, sortOrder);
                     listWord.clear();
                     while (cursor.moveToNext()) {
@@ -297,13 +331,11 @@ log("currentPosition:"+currentPosition);
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_KEY));
                         int remember = cursor.getInt(cursor
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_REMEMBER));
-                        int lesson = cursor.getInt(cursor
-                                .getColumnIndexOrThrow(DatabaseHelper.COL_LESSON));
                         int times = cursor.getInt(cursor
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_TIMES));
                         String type = cursor.getString(cursor
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_TYPE));
-                        Word word = new Word((int) id, key, remember == DatabaseHelper.REMEMBER ? true : false, times, lesson, type);
+                        Word word = new Word((int) id, key, remember == DatabaseHelper.REMEMBER ? true : false, times,Integer.parseInt(lesson), type);
                         listWord.add(word);
                     }
                     if (cursor != null) {
@@ -338,6 +370,10 @@ log("currentPosition:"+currentPosition);
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
+            startActivity(new Intent(this, ActivitySettings.class));
+            return true;
+        }else if(id == R.id.action_add_new_word){
+            startActivity(new Intent(this, ActivityAddNewWord.class));
             return true;
         }
         return super.onOptionsItemSelected(item);

@@ -6,5 +6,8 @@
     <string name="fanyi">点击生词翻译</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_activity_word">ActivityWord</string>
+    <string name="title_activity_activity_settings">ActivitySettings</string>
+    <string name="title_activity_activity_add_new_word">ActivityAddNewWord</string>
+
 
 </resources>

@@ -23,6 +23,14 @@
             android:name=".ActivityWord"
             android:label="@string/title_activity_activity_word" >
         </activity>
+        <activity
+            android:name=".ActivitySettings"
+            android:label="@string/title_activity_activity_settings" >
+        </activity>
+        <activity
+            android:name=".ActivityAddNewWord"
+            android:label="@string/title_activity_activity_add_new_word" >
+        </activity>
     </application>
 
 </manifest>

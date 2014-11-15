@@ -1,13 +1,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ActivityMain" >
+    tools:context="info.zhegui.words.ActivityAddNewWord" >
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:orderInCategory="100"
-        app:showAsAction="never" />
-    <item android:id="@+id/action_add_new_word"
-        android:title="add new word"
-        android:orderInCategory="99"
         app:showAsAction="never" />
 </menu>

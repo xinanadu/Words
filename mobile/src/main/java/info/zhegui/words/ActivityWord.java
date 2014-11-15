@@ -2,6 +2,7 @@ package info.zhegui.words;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
@@ -29,6 +30,7 @@ public class ActivityWord extends Activity {
     private final int WHAT_SHOW_COUNTDOWN = 101;
 
     private TextView tvCountDown;
+    private SharedPreferences prefs;
 
     private Handler mHandler = new Handler() {
         @Override
@@ -53,6 +55,7 @@ public class ActivityWord extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_word);
+        prefs=getSharedPreferences(getResources().getString(R.string.app_name), MODE_PRIVATE);
 
         mDetector = new GestureDetectorCompat(this, new MyGestureListener());
 
@@ -99,7 +102,9 @@ public class ActivityWord extends Activity {
             }
         });
 
-        mCountDownTimer = new CountDownTimer(3100, 1000) {
+        int duration= prefs.getInt(Constants.PREFS.DURATION, Constants.PREFS.DEFAULT_DURATION);
+
+        mCountDownTimer = new CountDownTimer(duration*1000L+100, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 int countDown = (int) millisUntilFinished  / 1000;
