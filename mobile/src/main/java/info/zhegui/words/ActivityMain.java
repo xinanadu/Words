@@ -72,6 +72,10 @@ public class ActivityMain extends ActionBarActivity {
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                currentPosition=0;
+
+                findNextForget();
+
                 startActivityWord();
             }
         });
@@ -92,16 +96,21 @@ public class ActivityMain extends ActionBarActivity {
             }
 
             currentPosition++;
-            while (currentPosition < listWord.size() && listWord.get(currentPosition).remember) {
-                currentPosition++;
-            }
+            findNextForget();
+
             if (currentPosition < listWord.size()) {
                 startActivityWord();
             } else {
-//                toast("no more");
+                toast("no more");
 
             }
 
+        }
+    }
+
+    private void findNextForget() {
+        while (currentPosition < listWord.size() && listWord.get(currentPosition).remember) {
+            currentPosition++;
         }
     }
 
