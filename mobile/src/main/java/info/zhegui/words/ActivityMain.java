@@ -1,11 +1,14 @@
 package info.zhegui.words;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -34,7 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class ActivityMain extends ActionBarActivity {
+public class ActivityMain extends Activity {
 
     private ArrayList<Word> listWord = new ArrayList<Word>();
     private ArrayList<String> listString = new ArrayList<String>();
@@ -143,12 +146,8 @@ public class ActivityMain extends ActionBarActivity {
             currentPosition++;
             findNextForget();
 
-            if (currentPosition < listWord.size()) {
-                startActivityWord();
-            } else {
-                toast("no more");
+            startActivityWord();
 
-            }
 
         }
     }
@@ -166,7 +165,9 @@ public class ActivityMain extends ActionBarActivity {
             Intent intent = new Intent(ActivityMain.this, ActivityWord.class);
             intent.putExtra("word", currentWord);
             startActivityForResult(intent, REQUEST_WORD);
-            overridePendingTransition(R.anim.fade_in_slow, R.anim.fade_out_slow);
+            overridePendingTransition(0, 0);
+        } else {
+            toast("no more");
         }
     }
 
@@ -174,21 +175,60 @@ public class ActivityMain extends ActionBarActivity {
         new Thread() {
             public void run() {
                 try {
-                    InputStream is = ActivityMain.this.getResources().openRawResource(R.raw.words);
-                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                    String str = null;
+//                    DatabaseHelper dbHelper=new DatabaseHelper(ActivityMain.this);
+//                    InputStream is = ActivityMain.this.getResources().openRawResource(R.raw.words);
+//                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+//                    String str = null;
+//                    listWord.clear();
+//                    while ((str = br.readLine()) != null) {
+//                        log(str);
+////                        listWord.add(new Word(str, false));
+//                        String[] arr=str.split(",");
+//                        dbHelper.insert(new Word(0,arr[0],false,0,4,arr[1]));
+//                        SystemClock.sleep(10);
+//                    }
+//                    br.close();
+//                    is.close();
+
+                    DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
+                    SQLiteDatabase db = null;
+                    Cursor cursor = null;
+                    String sortOrder = DatabaseHelper.COL_ID + " DESC";
+
+                    db = dbHelper.getWritableDatabase();
+                    cursor = db.query(DatabaseHelper.TBL_NAME, null,
+                            DatabaseHelper.COL_REMEMBER + "=? "
+                            ,
+                            new String[]{DatabaseHelper.FORGET + ""},
+                            null, null, sortOrder);
                     listWord.clear();
-                    ;
-                    while ((str = br.readLine()) != null) {
-                        log(str);
-                        listWord.add(new Word(str, false));
+                    while (cursor.moveToNext()) {
+                        long id = cursor.getLong(cursor
+                                .getColumnIndexOrThrow(DatabaseHelper.COL_ID));
+                        String key = cursor.getString(cursor
+                                .getColumnIndexOrThrow(DatabaseHelper.COL_KEY));
+                        int remember = cursor.getInt(cursor
+                                .getColumnIndexOrThrow(DatabaseHelper.COL_REMEMBER));
+                        int lesson = cursor.getInt(cursor
+                                .getColumnIndexOrThrow(DatabaseHelper.COL_LESSON));
+                        int times = cursor.getInt(cursor
+                                .getColumnIndexOrThrow(DatabaseHelper.COL_TIMES));
+                        String type = cursor.getString(cursor
+                                .getColumnIndexOrThrow(DatabaseHelper.COL_TYPE));
+                        Word word = new Word((int) id, key, remember == DatabaseHelper.REMEMBER ? true : false, times, lesson, type);
+                        listWord.add(word);
                     }
-                    br.close();
-                    is.close();
+                    if (cursor != null) {
+                        cursor.close();
+                        cursor = null;
+                    }
+                    if (db != null) {
+                        db.close();
+                        db.close();
+                    }
+
                     mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
-                } catch (FileNotFoundException e1) {
-                    e1.printStackTrace();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -215,15 +255,6 @@ public class ActivityMain extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public class Word {
-        public String key;
-        public boolean remember;
-
-        public Word(String key, boolean remember) {
-            this.key = key;
-            this.remember = remember;
-        }
-    }
 
     static class ViewHolder {
         TextView tvKey;
@@ -263,6 +294,7 @@ public class ActivityMain extends ActionBarActivity {
     class TaskFanyi extends AsyncTask<String, Integer, JSONObject> {
         @Override
         protected JSONObject doInBackground(String... params) {
+            publishProgress(1);
             String str = params[0];
             try {
                 str = URLEncoder.encode(params[0], "utf-8");

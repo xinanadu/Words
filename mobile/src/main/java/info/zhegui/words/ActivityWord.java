@@ -1,11 +1,11 @@
 package info.zhegui.words;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.view.GestureDetectorCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -20,7 +20,7 @@ import android.widget.TextView;
 import java.util.Random;
 
 
-public class ActivityWord extends ActionBarActivity {
+public class ActivityWord extends Activity {
 
     private GestureDetectorCompat mDetector;
 
@@ -63,15 +63,15 @@ public class ActivityWord extends ActionBarActivity {
         tvWord.setText(word);
 
         LinearLayout layoutWordContainer = (LinearLayout) findViewById(R.id.layout_word_container);
-        int gravity = Gravity.TOP;
+        int gravity = Gravity.CENTER;
         Random random=new Random();
         int randomInt=random.nextInt(9);
         if (randomInt<3) {
             gravity=Gravity.BOTTOM;
         } else if(randomInt>5){
             gravity=Gravity.TOP;
-        } else {
-            gravity=Gravity.CENTER;
+//        } else {
+//            gravity=Gravity.CENTER;
         }
         layoutWordContainer.setGravity(gravity);
 
@@ -88,23 +88,25 @@ public class ActivityWord extends ActionBarActivity {
             }
         });
 
-        mCountDownTimer = new CountDownTimer(4000, 1000) {
+        mCountDownTimer = new CountDownTimer(3100, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                int countDown = (int) (millisUntilFinished + 500) / 1000;
+                int countDown = (int) millisUntilFinished  / 1000;
                 Message msg = mHandler.obtainMessage(WHAT_SHOW_COUNTDOWN, countDown, 0);
                 msg.sendToTarget();
             }
 
             @Override
             public void onFinish() {
-                int countDown = 0;
-                Message msg = mHandler.obtainMessage(WHAT_SHOW_COUNTDOWN, countDown, 0);
-                msg.sendToTarget();
                 finish(RESULT_CANCELED);
             }
         };
         mCountDownTimer.start();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
     }
 
     private void finish(int result) {
@@ -118,8 +120,13 @@ public class ActivityWord extends ActionBarActivity {
     @Override
     public void finish() {
         super.finish();
+        overridePendingTransition(0,0);
 
-        overridePendingTransition(R.anim.fade_in_slow, R.anim.fade_out_slow);
+        if(mCountDownTimer!=null){
+            mCountDownTimer.cancel();
+            mCountDownTimer=null;
+        }
+
     }
 
     class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -146,24 +153,6 @@ public class ActivityWord extends ActionBarActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.activity_word, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     private void log(String msg) {
         Log.d("ActivityWord", msg);
