@@ -79,6 +79,19 @@ public class ActivityMain extends ActionBarActivity {
                 startActivityWord();
             }
         });
+
+        findViewById(R.id.btn_reset).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for(int index=0;index<listWord.size();index++){
+                    Word word=listWord.get(index);
+                    word.remember=false;
+                    listWord.set(index,word);
+                }
+
+                mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
+            }
+        });
     }
 
     @Override
