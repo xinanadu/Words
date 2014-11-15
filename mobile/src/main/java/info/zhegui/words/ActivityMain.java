@@ -165,13 +165,15 @@ public class ActivityMain extends ActionBarActivity {
         findViewById(R.id.btn_reset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                for (int index = 0; index < listWord.size(); index++) {
-                    Word word = listWord.get(index);
-                    word.remember = false;
-                    listWord.set(index, word);
-                }
+                new Thread() {
+                    public void run() {
+                        String lesson = spinnerLesson.getSelectedItem().toString();
+                        DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
+                        dbHelper.reset(Integer.parseInt(lesson));
 
-                mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
+                        loadWords();
+                    }
+                }.start();
             }
         });
 

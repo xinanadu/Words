@@ -185,6 +185,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	}
 
+    public void reset(int lesson) {
+        SQLiteDatabase sqliteDatabase = null;
+        try {
+            sqliteDatabase = this.getWritableDatabase();
+
+            String sql=" update "+TBL_NAME+" set "+COL_REMEMBER +" = "+FORGET +" where "+COL_LESSON+" = "+lesson;
+            log("sql:"+sql);
+            sqliteDatabase.execSQL(sql);
+
+            sqliteDatabase.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            if (sqliteDatabase != null) {
+                sqliteDatabase.close();
+                sqliteDatabase = null;
+            }
+        }
+
+    }
+
 	private void log(String msg) {
 		Log.e(this.getClass().getSimpleName(), msg);
 	}
