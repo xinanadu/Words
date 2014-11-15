@@ -74,7 +74,18 @@ public class ActivityWord extends Activity {
 //            gravity=Gravity.CENTER;
         }
         layoutWordContainer.setGravity(gravity);
-
+        findViewById(R.id.btn_stop).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish(Constants.ACTIVITY_RESULT.STOP);
+            }
+        });
+        findViewById(R.id.btn_pause).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish(Constants.ACTIVITY_RESULT.PAUSE);
+            }
+        });
         findViewById(R.id.btn_yes).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -2,6 +2,7 @@ package info.zhegui.words;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -9,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -37,10 +39,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class ActivityMain extends Activity {
+public class ActivityMain extends ActionBarActivity {
 
     private ArrayList<Word> listWord = new ArrayList<Word>();
     private ArrayList<String> listString = new ArrayList<String>();
+
+    private SharedPreferences prefs;
 
     private final int REQUEST_WORD = 201;
     private final int WHAT_SHOW_WORDS = 101;
@@ -48,6 +52,8 @@ public class ActivityMain extends Activity {
     private TextView tvFanyiTitle, tvFanyi;
     private ListView mListView;
     private ArrayAdapter<String> mAdapter;
+
+    private int state=Constants.STATE.STOPPED;
 
     /**
      * 当前要展示的生词位置
@@ -58,6 +64,8 @@ public class ActivityMain extends Activity {
      * 当前要翻译的内容
      */
     private String fanyiKey;
+
+    private final String POSITION="position";
 
     private Handler mHandler = new Handler() {
         @Override
@@ -81,7 +89,12 @@ public class ActivityMain extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        log("onCreate("+savedInstanceState+")");
         setContentView(R.layout.activity_main);
+
+        prefs=getSharedPreferences(getResources().getString(R.string.app_name), MODE_PRIVATE);
+        currentPosition=prefs.getInt(POSITION,0);
+        log("currentPosition:"+currentPosition);
 
         loadWords();
 
@@ -107,7 +120,12 @@ public class ActivityMain extends Activity {
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentPosition = 0;
+                if (state!=Constants.STATE.PAUSED) {
+                    //未暂停，从0开始
+                    currentPosition = 0;
+                }
+
+                state=Constants.STATE.RUNNING;
 
                 findNextForget();
 
@@ -138,12 +156,21 @@ public class ActivityMain extends Activity {
                 word.remember = true;
                 listWord.set(currentPosition, word);
                 mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
-            } else {
-                log("-->forget");
 
+                updateRemember(word,true);
+                currentPosition++;
+            } else if (resultCode == RESULT_CANCELED) {
+                log("-->forget");
+                currentPosition++;
+            } else if (resultCode == Constants.ACTIVITY_RESULT.PAUSE) {
+                log("-->pause");
+                state=Constants.STATE.PAUSED;
+            } else if (resultCode == Constants.ACTIVITY_RESULT.STOP) {
+                log("-->stop");
+                state=Constants.STATE.STOPPED;
+                currentPosition=0;
             }
 
-            currentPosition++;
             findNextForget();
 
             startActivityWord();
@@ -153,22 +180,83 @@ public class ActivityMain extends Activity {
     }
 
     private void findNextForget() {
-        while (currentPosition < listWord.size() && listWord.get(currentPosition).remember) {
+        while (state==Constants.STATE.RUNNING && currentPosition < listWord.size() && listWord.get(currentPosition).remember) {
             currentPosition++;
         }
     }
 
     private void startActivityWord() {
-        if (currentPosition < listWord.size()) {
-            String currentWord = listWord.get(currentPosition).key;
-            log("---curent word:" + currentWord);
-            Intent intent = new Intent(ActivityMain.this, ActivityWord.class);
-            intent.putExtra("word", currentWord);
-            startActivityForResult(intent, REQUEST_WORD);
-            overridePendingTransition(0, 0);
-        } else {
-            toast("no more");
+        if (state==Constants.STATE.RUNNING) {
+            if (currentPosition < listWord.size()) {
+                String currentWord = listWord.get(currentPosition).key;
+                log("---curent word:" + currentWord);
+                Intent intent = new Intent(ActivityMain.this, ActivityWord.class);
+                intent.putExtra("word", currentWord);
+                startActivityForResult(intent, REQUEST_WORD);
+                overridePendingTransition(0, 0);
+
+                updateTimes(currentWord);
+            } else {
+                toast("no more");
+            }
+        } else if(state==Constants.STATE.PAUSED){
+            toast("paused");
+        } else if(state==Constants.STATE.STOPPED){
+            toast("stopped");
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        log("onSaveInstanceState()");
+
+        outState.putInt(POSITION, currentPosition);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public View onCreatePanelView(int featureId) {
+        return super.onCreatePanelView(featureId);
+    }
+
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        // Always call the superclass so it can restore the view hierarchy
+        super.onRestoreInstanceState(savedInstanceState);
+        log("onRestoreInstanceState("+savedInstanceState+")");
+
+        currentPosition=savedInstanceState.getInt(POSITION);
+        state=Constants.STATE.PAUSED;
+
+        log("currentPosition:"+currentPosition);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        log("onDestroy()");
+log("currentPosition:"+currentPosition);
+        prefs.edit().putInt(POSITION, currentPosition).commit();
+    }
+
+    private void updateRemember(final Word word, final boolean remember) {
+        new Thread() {
+            public void run() {
+                DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
+                word.remember=remember;
+                dbHelper.update(word, word.id);
+            }
+        }.start();
+    }
+
+    private void updateTimes(final String currentWord) {
+        new Thread() {
+            public void run() {
+                DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
+                Word word = dbHelper.query(currentWord);
+                word.times = word.times + 1;
+                dbHelper.update(word, word.id);
+            }
+        }.start();
     }
 
     private void loadWords() {
@@ -337,6 +425,7 @@ public class ActivityMain extends Activity {
             }
         }
     }
+
 
     private void log(String msg) {
         Log.d("ActivityMain", msg);

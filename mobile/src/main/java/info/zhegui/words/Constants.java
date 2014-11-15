@@ -8,6 +8,18 @@ package info.zhegui.words;
  */
 public class Constants {
 
+
+    public static class ACTIVITY_RESULT{
+        public static final int PAUSE=101;
+        public static final int STOP=102;
+    }
+
+    public static class STATE{
+        public static final int PAUSED=101;
+        public static final int STOPPED=102;
+        public static final int RUNNING=103;
+    }
+
     public static class BAIDU_FANYI{
         public static final String API_KEY = "xddWAYzYYrxOsvQkdRfdrKt6";
         public static final String SECRET_KEY = "2CrVFFSGGVtkBawF0ig1sPtUgzsGobHf";

@@ -161,7 +161,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			values.put(COL_TYPE, word.type);
 			values.put(COL_TIMES, word.times);
 			values.put(COL_LESSON, word.lesson);
-			values.put(COL_REMEMBER, word.remember);
+            values.put(COL_REMEMBER, word.remember?REMEMBER:FORGET);
 
 			sqliteDatabase = this.getWritableDatabase();
 
