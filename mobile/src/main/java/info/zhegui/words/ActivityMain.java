@@ -1,6 +1,7 @@
 package info.zhegui.words;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
@@ -12,11 +13,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -24,6 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,10 +42,19 @@ public class ActivityMain extends ActionBarActivity {
     private final int REQUEST_WORD = 201;
     private final int WHAT_SHOW_WORDS = 101;
 
+    private TextView tvFanyiTitle, tvFanyi;
     private ListView mListView;
     private ArrayAdapter<String> mAdapter;
 
+    /**
+     * 当前要展示的生词位置
+     */
     private int currentPosition = 0;
+
+    /**
+     * 当前要翻译的内容
+     */
+    private String fanyiKey;
 
     private Handler mHandler = new Handler() {
         @Override
@@ -47,9 +62,11 @@ public class ActivityMain extends ActionBarActivity {
             switch (msg.what) {
                 case WHAT_SHOW_WORDS:
                     listString.clear();
+                    int count = 0;
                     for (Word word : listWord) {
-                        if (!word.remember)
-                            listString.add(word.key);
+                        if (!word.remember) {
+                            listString.add((++count) + ". " + word.key);
+                        }
                     }
                     mAdapter.notifyDataSetChanged();
                     break;
@@ -65,14 +82,29 @@ public class ActivityMain extends ActionBarActivity {
 
         loadWords();
 
+        tvFanyiTitle = (TextView) findViewById(R.id.tv_fanyi_title);
+        tvFanyi = (TextView) findViewById(R.id.tv_fanyi);
+
         mListView = (ListView) findViewById(R.id.listview);
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, listString);
         mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String key = listString.get(position);
+                key = key.substring(key.indexOf(".") + 1);
+                key = key.replaceAll("\\（[^}]*\\）", "");
+                log("-->key:" + key);
+                fanyiKey = key;
+                tvFanyiTitle.setText(fanyiKey);
+                new TaskFanyi().execute(key);
+            }
+        });
 
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentPosition=0;
+                currentPosition = 0;
 
                 findNextForget();
 
@@ -83,10 +115,10 @@ public class ActivityMain extends ActionBarActivity {
         findViewById(R.id.btn_reset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                for(int index=0;index<listWord.size();index++){
-                    Word word=listWord.get(index);
-                    word.remember=false;
-                    listWord.set(index,word);
+                for (int index = 0; index < listWord.size(); index++) {
+                    Word word = listWord.get(index);
+                    word.remember = false;
+                    listWord.set(index, word);
                 }
 
                 mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
@@ -225,6 +257,52 @@ public class ActivityMain extends ActionBarActivity {
             }
             holder.tvKey.setText(listString.get(position));
             return holder.tvKey;
+        }
+    }
+
+    class TaskFanyi extends AsyncTask<String, Integer, JSONObject> {
+        @Override
+        protected JSONObject doInBackground(String... params) {
+            String str = params[0];
+            try {
+                str = URLEncoder.encode(params[0], "utf-8");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            String url = "http://openapi.baidu.com/public/2.0/bmt/translate?client_id=" + Constants.BAIDU_FANYI.API_KEY + "&q=" + str + "&from=jp&to=zh";
+            String result = Utils.doHttpGet(ActivityMain.this, url);
+            log(result);
+            JSONObject obj = null;
+            try {
+                obj = new JSONObject(result);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return obj;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            tvFanyi.setText("querying...");
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject jsonObject) {
+            String text = "error, try again";
+            if (jsonObject != null) {
+                try {
+                    JSONObject obj = jsonObject.getJSONArray("trans_result").getJSONObject(0);
+                    String src = obj.getString("src");
+                    String dst = obj.getString("dst");
+                    text = dst;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                tvFanyi.setText(text);
+            } else {
+                tvFanyi.setText(text);
+            }
         }
     }
 
