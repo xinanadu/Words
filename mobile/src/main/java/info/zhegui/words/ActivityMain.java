@@ -178,7 +178,7 @@ public class ActivityMain extends ActionBarActivity {
         });
 
 
-        loadWords();
+//        loadWords();
     }
 
     @Override
