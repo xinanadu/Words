@@ -11,6 +11,7 @@ import android.os.Message;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -56,7 +57,7 @@ public class ActivityMain extends ActionBarActivity {
     private ListView mListView;
     private ArrayAdapter<String> mAdapter;
 
-    private int state=Constants.STATE.STOPPED;
+    private int state = Constants.STATE.STOPPED;
 
     /**
      * 当前要展示的生词位置
@@ -68,7 +69,7 @@ public class ActivityMain extends ActionBarActivity {
      */
     private String fanyiKey;
 
-    private final String POSITION="position";
+    private final String POSITION = "position";
 
     private Handler mHandler = new Handler() {
         @Override
@@ -92,12 +93,15 @@ public class ActivityMain extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        log("onCreate("+savedInstanceState+")");
+        log("onCreate(" + savedInstanceState + ")");
         setContentView(R.layout.activity_main);
 
-        prefs=getSharedPreferences(getResources().getString(R.string.app_name), MODE_PRIVATE);
-        currentPosition=prefs.getInt(POSITION,0);
-        log("currentPosition:"+currentPosition);
+        prefs = getSharedPreferences(getResources().getString(R.string.app_name), MODE_PRIVATE);
+        currentPosition = prefs.getInt(POSITION, 0);
+        log("currentPosition:" + currentPosition);
+
+        int startCount = prefs.getInt(Constants.PREFS.START_COUNT, 0);
+        prefs.edit().putInt(Constants.PREFS.START_COUNT, startCount + 1).commit();
 
 
         tvFanyiTitle = (TextView) findViewById(R.id.tv_fanyi_title);
@@ -128,7 +132,6 @@ public class ActivityMain extends ActionBarActivity {
         spinnerLesson.setSelection(lesson);
 
 
-
         mListView = (ListView) findViewById(R.id.listview);
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, listString);
         mListView.setAdapter(mAdapter);
@@ -136,11 +139,11 @@ public class ActivityMain extends ActionBarActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String key = listString.get(position);
-                key = key.substring(key.indexOf(".") + 1);
+                key = key.substring(key.indexOf(". ") + 2);
+                fanyiKey = key;
                 key = key.replaceAll("\\（[^}]*\\）", ""); //日文括号
                 key = key.replaceAll("\\([^}]*\\)", "");//英文括号
                 log("-->key:" + key);
-                fanyiKey = key;
                 tvFanyiTitle.setText(fanyiKey);
                 new TaskFanyi().execute(key);
             }
@@ -149,12 +152,12 @@ public class ActivityMain extends ActionBarActivity {
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (state!=Constants.STATE.PAUSED) {
+                if (state != Constants.STATE.PAUSED) {
                     //未暂停，从0开始
                     currentPosition = 0;
                 }
 
-                state=Constants.STATE.RUNNING;
+                state = Constants.STATE.RUNNING;
 
                 findNextForget();
 
@@ -191,18 +194,18 @@ public class ActivityMain extends ActionBarActivity {
                 listWord.set(currentPosition, word);
                 mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
 
-                updateRemember(word,true);
+                updateRemember(word, true);
                 currentPosition++;
             } else if (resultCode == RESULT_CANCELED) {
                 log("-->forget");
                 currentPosition++;
             } else if (resultCode == Constants.ACTIVITY_RESULT.PAUSE) {
                 log("-->pause");
-                state=Constants.STATE.PAUSED;
+                state = Constants.STATE.PAUSED;
             } else if (resultCode == Constants.ACTIVITY_RESULT.STOP) {
                 log("-->stop");
-                state=Constants.STATE.STOPPED;
-                currentPosition=0;
+                state = Constants.STATE.STOPPED;
+                currentPosition = 0;
             }
 
             findNextForget();
@@ -214,13 +217,13 @@ public class ActivityMain extends ActionBarActivity {
     }
 
     private void findNextForget() {
-        while (state==Constants.STATE.RUNNING && currentPosition < listWord.size() && listWord.get(currentPosition).remember) {
+        while (state == Constants.STATE.RUNNING && currentPosition < listWord.size() && listWord.get(currentPosition).remember) {
             currentPosition++;
         }
     }
 
     private void startActivityWord() {
-        if (state==Constants.STATE.RUNNING) {
+        if (state == Constants.STATE.RUNNING) {
             if (currentPosition < listWord.size()) {
                 String currentWord = listWord.get(currentPosition).key;
                 log("---curent word:" + currentWord);
@@ -233,9 +236,9 @@ public class ActivityMain extends ActionBarActivity {
             } else {
                 toast("no more");
             }
-        } else if(state==Constants.STATE.PAUSED){
+        } else if (state == Constants.STATE.PAUSED) {
             toast("paused");
-        } else if(state==Constants.STATE.STOPPED){
+        } else if (state == Constants.STATE.STOPPED) {
             toast("stopped");
         }
     }
@@ -256,19 +259,19 @@ public class ActivityMain extends ActionBarActivity {
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         // Always call the superclass so it can restore the view hierarchy
         super.onRestoreInstanceState(savedInstanceState);
-        log("onRestoreInstanceState("+savedInstanceState+")");
+        log("onRestoreInstanceState(" + savedInstanceState + ")");
 
-        currentPosition=savedInstanceState.getInt(POSITION);
-        state=Constants.STATE.PAUSED;
+        currentPosition = savedInstanceState.getInt(POSITION);
+        state = Constants.STATE.PAUSED;
 
-        log("currentPosition:"+currentPosition);
+        log("currentPosition:" + currentPosition);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         log("onDestroy()");
-log("currentPosition:"+currentPosition);
+        log("currentPosition:" + currentPosition);
         prefs.edit().putInt(POSITION, currentPosition).commit();
     }
 
@@ -276,7 +279,7 @@ log("currentPosition:"+currentPosition);
         new Thread() {
             public void run() {
                 DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
-                word.remember=remember;
+                word.remember = remember;
                 dbHelper.update(word, word.id);
             }
         }.start();
@@ -294,23 +297,29 @@ log("currentPosition:"+currentPosition);
     }
 
     private void loadWords() {
+        final String DATABASE_INITAILIZED = "database_initialized";
         new Thread() {
             public void run() {
                 try {
-//                    DatabaseHelper dbHelper=new DatabaseHelper(ActivityMain.this);
-//                    InputStream is = ActivityMain.this.getResources().openRawResource(R.raw.words);
-//                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-//                    String str = null;
-//                    listWord.clear();
-//                    while ((str = br.readLine()) != null) {
-//                        log(str);
-////                        listWord.add(new Word(str, false));
-//                        String[] arr=str.split(",");
-//                        dbHelper.insert(new Word(0,arr[0],false,0,4,arr[1]));
-//                        SystemClock.sleep(10);
-//                    }
-//                    br.close();
-//                    is.close();
+                    boolean databaseInitialized = prefs.getBoolean(DATABASE_INITAILIZED, false);
+                    log("databaseInitialized:" + databaseInitialized);
+                    if (!databaseInitialized) {
+                        DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
+                        InputStream is = ActivityMain.this.getResources().openRawResource(R.raw.lesson4);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                        String str = null;
+                        listWord.clear();
+                        while ((str = br.readLine()) != null) {
+                            log(str);
+//                        listWord.add(new Word(str, false));
+                            String[] arr = str.split(",");
+                            dbHelper.insert(new Word(0, arr[0], "", false, 0, 4, arr[1]));
+                            SystemClock.sleep(10);
+                        }
+                        br.close();
+                        is.close();
+                        prefs.edit().putBoolean(DATABASE_INITAILIZED, true).commit();
+                    }
 
                     String lesson = spinnerLesson.getSelectedItem().toString();
 
@@ -321,9 +330,9 @@ log("currentPosition:"+currentPosition);
 
                     db = dbHelper.getWritableDatabase();
                     cursor = db.query(DatabaseHelper.TBL_NAME, null,
-                            DatabaseHelper.COL_REMEMBER + "=? and "+
-                            DatabaseHelper.COL_LESSON + " =? ",
-                            new String[]{DatabaseHelper.FORGET + "",lesson },
+                            DatabaseHelper.COL_REMEMBER + "=? and " +
+                                    DatabaseHelper.COL_LESSON + " =? ",
+                            new String[]{DatabaseHelper.FORGET + "", lesson},
                             null, null, sortOrder);
                     listWord.clear();
                     while (cursor.moveToNext()) {
@@ -331,13 +340,15 @@ log("currentPosition:"+currentPosition);
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_ID));
                         String key = cursor.getString(cursor
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_KEY));
+                        String content = cursor.getString(cursor
+                                .getColumnIndexOrThrow(DatabaseHelper.COL_CONTENT));
                         int remember = cursor.getInt(cursor
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_REMEMBER));
                         int times = cursor.getInt(cursor
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_TIMES));
                         String type = cursor.getString(cursor
                                 .getColumnIndexOrThrow(DatabaseHelper.COL_TYPE));
-                        Word word = new Word((int) id, key, remember == DatabaseHelper.REMEMBER ? true : false, times,Integer.parseInt(lesson), type);
+                        Word word = new Word((int) id, key, content, remember == DatabaseHelper.REMEMBER ? true : false, times, Integer.parseInt(lesson), type);
                         listWord.add(word);
                     }
                     if (cursor != null) {
@@ -374,7 +385,7 @@ log("currentPosition:"+currentPosition);
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, ActivitySettings.class));
             return true;
-        }else if(id == R.id.action_add_new_word){
+        } else if (id == R.id.action_add_new_word) {
             startActivity(new Intent(this, ActivityAddNewWord.class));
             return true;
         }
@@ -417,26 +428,75 @@ log("currentPosition:"+currentPosition);
         }
     }
 
-    class TaskFanyi extends AsyncTask<String, Integer, JSONObject> {
+    class TaskFanyi extends AsyncTask<String, Integer, Word> {
         @Override
-        protected JSONObject doInBackground(String... params) {
+        protected Word doInBackground(String... params) {
             publishProgress(1);
             String str = params[0];
-            try {
-                str = URLEncoder.encode(params[0], "utf-8");
-            } catch (Exception e) {
-                e.printStackTrace();
+            Word word = null;
+            int index=-1;
+            for (int i=0;i<listWord.size();i++) {
+                Word wordTemp = listWord.get(i);
+                if (TextUtils.equals(fanyiKey, wordTemp.key)) {
+                    index=i;
+                    word = wordTemp;
+                    break;
+                }
             }
-            String url = "http://openapi.baidu.com/public/2.0/bmt/translate?client_id=" + Constants.BAIDU_FANYI.API_KEY + "&q=" + str + "&from=jp&to=zh";
-            String result = Utils.doHttpGet(ActivityMain.this, url);
-            log(result);
-            JSONObject obj = null;
-            try {
-                obj = new JSONObject(result);
-            } catch (Exception e) {
-                e.printStackTrace();
+            final int indexFinal=index;
+
+            final Word wordFinal=word;
+            if (wordFinal == null || TextUtils.isEmpty(wordFinal.content)) {
+                try {
+                    str = URLEncoder.encode(str, "utf-8");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                String url = "http://openapi.baidu.com/public/2.0/bmt/translate?client_id=" + Constants.BAIDU_FANYI.API_KEY + "&q=" + str + "&from=jp&to=zh";
+                String result = Utils.doHttpGet(ActivityMain.this, url);
+                log(result);
+
+                JSONObject jsonObject = null;
+                try {
+                    jsonObject = new JSONObject(result);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                String text = "error, try again";
+                if (jsonObject != null) {
+                    log("online content");
+                    try {
+                        JSONObject obj = jsonObject.getJSONArray("trans_result").getJSONObject(0);
+                        final String src = obj.getString("src");
+                        final String dst = obj.getString("dst");
+                        text = dst;
+
+                        new Thread() {
+                            public void run() {
+
+                                if (wordFinal != null) {
+                                    wordFinal.content = dst;
+                                    DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
+                                    dbHelper.update(wordFinal, wordFinal.id);
+
+                                    listWord.set(indexFinal, wordFinal);
+                                }
+                            }
+                        }.start();
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            } else {
+                log("local content");
             }
-            return obj;
+
+
+            return wordFinal;
         }
 
         @Override
@@ -446,21 +506,10 @@ log("currentPosition:"+currentPosition);
         }
 
         @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            String text = "error, try again";
-            if (jsonObject != null) {
-                try {
-                    JSONObject obj = jsonObject.getJSONArray("trans_result").getJSONObject(0);
-                    String src = obj.getString("src");
-                    String dst = obj.getString("dst");
-                    text = dst;
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                tvFanyi.setText(text);
-            } else {
-                tvFanyi.setText(text);
-            }
+        protected void onPostExecute(Word word) {
+if(word!=null) {
+    tvFanyi.setText("[" + word.type + "] " + word.content);
+}
         }
     }
 

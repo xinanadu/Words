@@ -100,7 +100,7 @@ public class ActivityAddNewWord extends ActionBarActivity {
                         log("type:" + type);
                         String lesson = spinnerLesson.getSelectedItem().toString();
                         log("lesson:" + lesson);
-                        Word word = new Word(0, key, false, 0, Integer.parseInt(lesson), type);
+                        Word word = new Word(0, key,"", false, 0, Integer.parseInt(lesson), type);
                         DatabaseHelper dbHelper = new DatabaseHelper(ActivityAddNewWord.this);
                         long rows = dbHelper.insert(word);
 

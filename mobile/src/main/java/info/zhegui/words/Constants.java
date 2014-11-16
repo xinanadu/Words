@@ -13,6 +13,8 @@ public class Constants {
         public static final String LESSON="lesson";
 
         public static final int DEFAULT_DURATION=3;
+
+        public static final String START_COUNT="start_count";
     }
 
     public static class ACTIVITY_RESULT{
