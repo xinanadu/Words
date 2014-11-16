@@ -434,18 +434,18 @@ public class ActivityMain extends ActionBarActivity {
             publishProgress(1);
             String str = params[0];
             Word word = null;
-            int index=-1;
-            for (int i=0;i<listWord.size();i++) {
+            int index = -1;
+            for (int i = 0; i < listWord.size(); i++) {
                 Word wordTemp = listWord.get(i);
                 if (TextUtils.equals(fanyiKey, wordTemp.key)) {
-                    index=i;
+                    index = i;
                     word = wordTemp;
                     break;
                 }
             }
-            final int indexFinal=index;
+            final int indexFinal = index;
 
-            final Word wordFinal=word;
+            final Word wordFinal = word;
             if (wordFinal == null || TextUtils.isEmpty(wordFinal.content)) {
                 try {
                     str = URLEncoder.encode(str, "utf-8");
@@ -472,20 +472,18 @@ public class ActivityMain extends ActionBarActivity {
                         final String dst = obj.getString("dst");
                         text = dst;
 
-                        new Thread() {
-                            public void run() {
+                        if (wordFinal != null) {
+                            wordFinal.content = dst;
+                            new Thread() {
+                                public void run() {
 
-                                if (wordFinal != null) {
-                                    wordFinal.content = dst;
                                     DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
                                     dbHelper.update(wordFinal, wordFinal.id);
 
                                     listWord.set(indexFinal, wordFinal);
                                 }
-                            }
-                        }.start();
-
-
+                            }.start();
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -507,9 +505,9 @@ public class ActivityMain extends ActionBarActivity {
 
         @Override
         protected void onPostExecute(Word word) {
-if(word!=null) {
-    tvFanyi.setText("[" + word.type + "] " + word.content);
-}
+            if (word != null) {
+                tvFanyi.setText("[" + word.type + "] " + word.content);
+            }
         }
     }
 
