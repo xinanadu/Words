@@ -22,9 +22,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private Context mContext;
 
-    private static final int VERSION = 2;
+    private static final int VERSION = 3;
 
-    private final static String DB_NAME = "database";
+    public final static String DB_NAME = "words";
     public final static String TBL_NAME = "words";
 
     public final static String COL_ID = "_id";
