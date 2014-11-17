@@ -1,8 +1,8 @@
 package info.zhegui.words;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -18,7 +18,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -31,14 +30,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class ActivityMain extends ActionBarActivity {
@@ -305,19 +300,33 @@ public class ActivityMain extends ActionBarActivity {
                     log("databaseInitialized:" + databaseInitialized);
                     if (!databaseInitialized) {
                         DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
-                        InputStream is = ActivityMain.this.getResources().openRawResource(R.raw.lesson4);
-                        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                        String str = null;
-                        listWord.clear();
-                        while ((str = br.readLine()) != null) {
-                            log(str);
+
+                        AssetManager assets = ActivityMain.this.getAssets();
+                        String fileNameArray[]=assets.list("");
+                        for(String fileName:fileNameArray) {
+                            if(fileName!=null && fileName.startsWith("lesson")) {
+                                log("--->"+fileName);
+                                String lessonStr=fileName.replace("lesson","");
+                                lessonStr=lessonStr.replace(".txt","");
+                                int lesson=Integer.parseInt(lessonStr);
+                                InputStream is =assets.open(fileName);
+                                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                                String str = null;
+                                listWord.clear();
+                                while ((str = br.readLine()) != null) {
+                                    log(str);
 //                        listWord.add(new Word(str, false));
-                            String[] arr = str.split(",");
-                            dbHelper.insert(new Word(0, arr[0], "", false, 0, 4, arr[1]));
-                            SystemClock.sleep(10);
+                                    String[] arr = str.split(",");
+                                    dbHelper.insert(new Word(0, arr[0], "", false, 0, lesson, arr[1]));
+                                    SystemClock.sleep(5);
+                                }
+                                br.close();
+                                is.close();
+                            }
                         }
-                        br.close();
-                        is.close();
+                        assets.close();
+
+
                         prefs.edit().putBoolean(DATABASE_INITAILIZED, true).commit();
                     }
 
