@@ -324,8 +324,6 @@ public class ActivityMain extends ActionBarActivity {
                                 is.close();
                             }
                         }
-                        assets.close();
-
 
                         prefs.edit().putBoolean(DATABASE_INITAILIZED, true).commit();
                     }
