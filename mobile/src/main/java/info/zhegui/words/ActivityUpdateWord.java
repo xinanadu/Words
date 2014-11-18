@@ -67,7 +67,7 @@ public class ActivityUpdateWord extends ActionBarActivity {
         etKey = (EditText) findViewById(R.id.et_key);
         etContent = (EditText) findViewById(R.id.et_content);
         btnAdd = (Button) findViewById(R.id.button);
-        btnAdd.setText("update");
+        btnAdd.setText("edit");
 
         ArrayAdapter<CharSequence> adapterType = ArrayAdapter.createFromResource(this,
                 R.array.type, android.R.layout.simple_spinner_item);

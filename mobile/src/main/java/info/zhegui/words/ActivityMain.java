@@ -49,7 +49,7 @@ public class ActivityMain extends ActionBarActivity {
     private final int REQUEST_VIEW = 201, REQUEST_UPDATE=202;
     private final int WHAT_SHOW_WORDS = 101;
 
-    private TextView tvFanyiTitle, tvFanyi;
+    private TextView tvFanyiTitle, tvFanyi,tvNoRecord;
     private ListView mListView;
     private ArrayAdapter<String> mAdapter;
 
@@ -80,6 +80,11 @@ public class ActivityMain extends ActionBarActivity {
                         }
                     }
                     mAdapter.notifyDataSetChanged();
+                    if(listString.size()==0){
+                        tvNoRecord.setVisibility(View.VISIBLE);
+                    }else{
+                        tvNoRecord.setVisibility(View.GONE);
+                    }
                     break;
             }
         }
@@ -102,6 +107,7 @@ public class ActivityMain extends ActionBarActivity {
 
         tvFanyiTitle = (TextView) findViewById(R.id.tv_fanyi_title);
         tvFanyi = (TextView) findViewById(R.id.tv_fanyi);
+        tvNoRecord = (TextView) findViewById(R.id.tv_no_record);
 
         spinnerLesson = (Spinner) findViewById(R.id.spinner_lesson);
 

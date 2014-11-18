@@ -10,10 +10,6 @@
     tools:context="info.zhegui.words.ActivityAddNewWord">
 
 
-    <TextView
-        android:text="@string/hello_world"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
 
     <Spinner
         android:layout_width="match_parent"
