@@ -46,7 +46,7 @@ public class ActivityMain extends ActionBarActivity {
 
     private SharedPreferences prefs;
 
-    private final int REQUEST_WORD = 201;
+    private final int REQUEST_VIEW = 201, REQUEST_UPDATE=202;
     private final int WHAT_SHOW_WORDS = 101;
 
     private TextView tvFanyiTitle, tvFanyi;
@@ -144,6 +144,15 @@ public class ActivityMain extends ActionBarActivity {
                 new TaskFanyi().execute(key);
             }
         });
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intent=new Intent(ActivityMain.this, ActivityUpdateWord.class);
+                intent.putExtra("key",listWord.get(position).key);
+                startActivityForResult(intent, REQUEST_UPDATE);
+                return true;
+            }
+        });
 
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -184,7 +193,7 @@ public class ActivityMain extends ActionBarActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_WORD) {
+        if (requestCode == REQUEST_VIEW) {
             if (resultCode == RESULT_OK) {
                 log("-->remember");
                 Word word = listWord.get(currentPosition);
@@ -211,6 +220,11 @@ public class ActivityMain extends ActionBarActivity {
             startActivityWord();
 
 
+        }else if(requestCode==REQUEST_UPDATE){
+            if (resultCode == RESULT_OK) {
+                //更新listWord
+                loadWords();
+            }
         }
     }
 
@@ -227,7 +241,7 @@ public class ActivityMain extends ActionBarActivity {
                 log("---curent word:" + currentWord);
                 Intent intent = new Intent(ActivityMain.this, ActivityWord.class);
                 intent.putExtra("word", currentWord);
-                startActivityForResult(intent, REQUEST_WORD);
+                startActivityForResult(intent, REQUEST_VIEW);
                 overridePendingTransition(0, 0);
 
                 updateTimes(currentWord);

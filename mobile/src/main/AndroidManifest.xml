@@ -33,6 +33,10 @@
             android:name=".ActivityAddNewWord"
             android:label="@string/title_activity_activity_add_new_word" >
         </activity>
+        <activity
+            android:name=".ActivityUpdateWord"
+            android:label="@string/title_activity_activity_add_new_word" >
+        </activity>
     </application>
 
 </manifest>
