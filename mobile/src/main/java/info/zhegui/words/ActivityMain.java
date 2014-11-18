@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 public class ActivityMain extends ActionBarActivity {
@@ -150,6 +151,8 @@ public class ActivityMain extends ActionBarActivity {
                 if (state != Constants.STATE.PAUSED) {
                     //未暂停，从0开始
                     currentPosition = 0;
+
+                    Collections.shuffle(listWord);
                 }
 
                 state = Constants.STATE.RUNNING;
@@ -366,6 +369,9 @@ public class ActivityMain extends ActionBarActivity {
                         db.close();
                         db.close();
                     }
+
+
+                    Collections.shuffle(listWord);
 
                     mHandler.sendEmptyMessage(WHAT_SHOW_WORDS);
                 } catch (Exception e) {
