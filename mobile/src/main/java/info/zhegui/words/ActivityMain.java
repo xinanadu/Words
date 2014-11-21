@@ -315,24 +315,28 @@ public class ActivityMain extends ActionBarActivity {
     }
 
     private void loadWords() {
-        final String DATABASE_INITAILIZED = "database_initialized";
+        final String DB_SESSON_ = "db_lesson_";
         new Thread() {
             public void run() {
                 try {
-                    boolean databaseInitialized = prefs.getBoolean(DATABASE_INITAILIZED, false);
-                    log("databaseInitialized:" + databaseInitialized);
-                    if (!databaseInitialized) {
-                        DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
 
-                        AssetManager assets = ActivityMain.this.getAssets();
-                        String fileNameArray[]=assets.list("");
-                        for(String fileName:fileNameArray) {
-                            if(fileName!=null && fileName.startsWith("lesson")) {
-                                log("--->"+fileName);
-                                String lessonStr=fileName.replace("lesson","");
-                                lessonStr=lessonStr.replace(".txt","");
-                                int lesson=Integer.parseInt(lessonStr);
-                                InputStream is =assets.open(fileName);
+                    DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
+
+                    AssetManager assets = ActivityMain.this.getAssets();
+                    String fileNameArray[] = assets.list("");
+                    for (String fileName : fileNameArray) {
+                        if (fileName != null && fileName.startsWith("lesson")) {
+                            log("--->" + fileName);
+                            String lessonStr = fileName.replace("lesson", "");
+                            lessonStr = lessonStr.replace(".txt", "");
+                            int lesson = Integer.parseInt(lessonStr);
+
+                            String prefsLesson=DB_SESSON_+lesson;
+                            boolean databaseInitialized = prefs.getBoolean(prefsLesson, false);
+                            log("databaseInitialized:" + databaseInitialized);
+                            if (!databaseInitialized) {
+
+                                InputStream is = assets.open(fileName);
                                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
                                 String str = null;
                                 listWord.clear();
@@ -345,15 +349,15 @@ public class ActivityMain extends ActionBarActivity {
                                 }
                                 br.close();
                                 is.close();
+
+                                prefs.edit().putBoolean(prefsLesson, true).commit();
                             }
                         }
-
-                        prefs.edit().putBoolean(DATABASE_INITAILIZED, true).commit();
                     }
+
 
                     String lesson = spinnerLesson.getSelectedItem().toString();
 
-                    DatabaseHelper dbHelper = new DatabaseHelper(ActivityMain.this);
                     SQLiteDatabase db = null;
                     Cursor cursor = null;
                     String sortOrder = DatabaseHelper.COL_ID + " DESC";
